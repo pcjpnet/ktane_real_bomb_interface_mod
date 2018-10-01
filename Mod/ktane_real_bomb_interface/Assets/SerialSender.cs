@@ -11,6 +11,8 @@ public class SerialSender : MonoBehaviour {
 	
 	private string folderPath;
 	
+	private SerialPort uart;
+	
 	private KMGameInfo.State state_game;
 	private bool state_alarm;
 	private bool state_light;
@@ -41,6 +43,14 @@ public class SerialSender : MonoBehaviour {
 	}
 
 
+	private void writeLine(string line)
+	{
+		
+		uart.WriteLine(line);
+		
+	}
+
+
 	private void Awake()
 	{
 		// Create Directory
@@ -62,44 +72,60 @@ public class SerialSender : MonoBehaviour {
 		bombInfo.OnBombSolved += OnBombSolved;
 		
 		Log("Registered Callback Functions");
+		
+		uart = new SerialPort("COM3", 9600);
+		uart.ReadTimeout = 50;
+		uart.NewLine = "\r\n";
+		uart.Open();
+		writeLine("!OPEN");
+		
+		Log("UART:Opened");
+		
 	}
 
 
 	private void Update()
 	{
-		if (bombInfo != null) {
-			
-			
+		if (bombInfo != null && bombInfo.IsBombPresent()) {
 			
 			if (state_time != bombInfo.GetTime()) {
 				state_time = bombInfo.GetTime();
 				//Log("GetTime: " + state_time.ToString("0000"));
 			}
 			
-			if (state_fmtTime != bombInfo.GetFormattedTime() && bombInfo.GetFormattedTime() != null) {
+			if (state_fmtTime != bombInfo.GetFormattedTime() && !String.IsNullOrEmpty(bombInfo.GetFormattedTime())) {
 				state_fmtTime = bombInfo.GetFormattedTime();
+				writeLine("!T" + state_fmtTime);
 				Log("GetFormattedTime: " + state_fmtTime);
 			}
 			
 			if (state_strikes != bombInfo.GetStrikes()) {
 				state_strikes = bombInfo.GetStrikes();
-				Log("GetStrikes: " + state_strikes);
+				writeLine("!S" + state_strikes.ToString());
+				Log("GetStrikes: " + state_strikes.ToString());
 			}
 			
 			
 			
 			if (state_solvableModulesCnt != bombInfo.GetSolvableModuleNames().Count) {
 				state_solvableModulesCnt = bombInfo.GetSolvableModuleNames().Count;
+				writeLine("!MODULE" + state_solvableModulesCnt.ToString());
 				Log("GetSolvableModuleNamesCount: " + state_solvableModulesCnt.ToString());
 			}
 			
 			if (state_solvedModulesCnt != bombInfo.GetSolvedModuleNames().Count) {
 				state_solvedModulesCnt = bombInfo.GetSolvedModuleNames().Count;
+				writeLine("!MSOLVE" + state_solvedModulesCnt.ToString());
 				Log("GetSolvedModuleNamesCount: " + state_solvedModulesCnt.ToString());
 			}
 			
 			if (state_isBombPresent != bombInfo.IsBombPresent()) {
 				state_isBombPresent = bombInfo.IsBombPresent();
+				if (state_isBombPresent) {
+					writeLine("!BOMBTRUE");
+				} else {
+					writeLine("!BOMBFALS");
+				}
 				Log("IsBombPresent: " + state_isBombPresent.ToString());
 			}
 			
@@ -121,6 +147,13 @@ public class SerialSender : MonoBehaviour {
 	protected void OnStateChange(KMGameInfo.State state) {
 		if (state_game != state) {
 			state_game = state;
+			if (state_game.ToString() == "Quitting") {
+				writeLine("!CLOSE");
+				uart.Close();
+				Log("UART:Closed");
+			} else {
+				writeLine("!STATE" + state_game.ToString());
+			}
 			Log("OnStateChange:" + state_game.ToString());
 		}
 	}
@@ -130,6 +163,11 @@ public class SerialSender : MonoBehaviour {
 	protected void OnAlarmClockChange(bool state) {
 		if (state_alarm != state) {
 			state_alarm = state;
+			if (state_alarm) {
+				writeLine("!ALMTRUE");
+			} else {
+				writeLine("!ALMFALS");
+			}
 			Log("OnAlarmClockChange:" + state_alarm.ToString());
 		}
 	}
@@ -139,17 +177,24 @@ public class SerialSender : MonoBehaviour {
 	protected void OnLightsChange(bool state) {
 		if (state_light != state) {
 			state_light = state;
+			if (state_light) {
+				writeLine("!LIGHTRUE");
+			} else {
+				writeLine("!LIGHFALS");
+			}
 			Log("OnLightsChange:" + state_light.ToString());
 		}
 	}
 
 
 	protected void OnBombExploded() {
+		writeLine("!BOMEXP");
 		Log("OnBombExploded");
 	}
 
 
 	protected void OnBombSolved() {
+		writeLine("!BOMSLV");
 		Log("OnBombSolved");
 	}
 

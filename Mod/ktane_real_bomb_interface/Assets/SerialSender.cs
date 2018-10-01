@@ -11,7 +11,7 @@ public class SerialSender : MonoBehaviour {
 	
 	private string folderPath;
 	
-	private string state_game;
+	private KMGameInfo.State state_game;
 	private bool state_alarm;
 	private bool state_light;
 	
@@ -119,9 +119,9 @@ public class SerialSender : MonoBehaviour {
 	// [Unlock] The unlock state where manual verification and tutorial take place
 	// [Quitting] Game is exiting
 	protected void OnStateChange(KMGameInfo.State state) {
-		if (state_game != state.ToString()) {
-			state_game = state.ToString();
-			Log("OnStateChange:" + state_game);
+		if (state_game != state) {
+			state_game = state;
+			Log("OnStateChange:" + state_game.ToString());
 		}
 	}
 

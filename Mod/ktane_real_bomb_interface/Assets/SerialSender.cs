@@ -2,10 +2,11 @@
 using System.IO;
 using System.IO.Ports;
 using UnityEngine;
+//using Newtonsoft.Json;
 
 
 public class SerialSender : MonoBehaviour {
-
+	
 	KMGameInfo gameInfo;
 	KMBombInfo bombInfo;
 	
@@ -77,9 +78,25 @@ public class SerialSender : MonoBehaviour {
 		uart.ReadTimeout = 50;
 		uart.NewLine = "\r\n";
 		uart.Open();
-		writeLine("!OPEN");
+		writeLine("!PORT-OPEN");
 		
 		Log("UART:Opened");
+		
+		settings = JsonConvert.DeserializeObject<RealBombSettings>(modSettings.Settings);
+		Log("Loaded");
+		Log("Settings: " + settings.ip.ToString());
+		
+		
+		//C:/Users/USER/AppData/LocalLow/Steel Crate Games/Keep Talking and Nobody Explodes/Modsettings/real_bomb_interface-settings.txt
+		
+		
+		
+		
+		
+		
+		
+		
+		
 		
 	}
 
@@ -95,13 +112,13 @@ public class SerialSender : MonoBehaviour {
 			
 			if (state_fmtTime != bombInfo.GetFormattedTime() && !String.IsNullOrEmpty(bombInfo.GetFormattedTime())) {
 				state_fmtTime = bombInfo.GetFormattedTime();
-				writeLine("!T" + state_fmtTime);
+				writeLine("!TIME" + state_fmtTime);
 				Log("GetFormattedTime: " + state_fmtTime);
 			}
 			
 			if (state_strikes != bombInfo.GetStrikes()) {
 				state_strikes = bombInfo.GetStrikes();
-				writeLine("!S" + state_strikes.ToString());
+				writeLine("!STRIKE" + state_strikes.ToString("000"));
 				Log("GetStrikes: " + state_strikes.ToString());
 			}
 			
@@ -109,22 +126,22 @@ public class SerialSender : MonoBehaviour {
 			
 			if (state_solvableModulesCnt != bombInfo.GetSolvableModuleNames().Count) {
 				state_solvableModulesCnt = bombInfo.GetSolvableModuleNames().Count;
-				writeLine("!MODULE" + state_solvableModulesCnt.ToString());
+				writeLine("!MODULE" + state_solvableModulesCnt.ToString("000"));
 				Log("GetSolvableModuleNamesCount: " + state_solvableModulesCnt.ToString());
 			}
 			
 			if (state_solvedModulesCnt != bombInfo.GetSolvedModuleNames().Count) {
 				state_solvedModulesCnt = bombInfo.GetSolvedModuleNames().Count;
-				writeLine("!MSOLVE" + state_solvedModulesCnt.ToString());
+				writeLine("!MSOLVE" + state_solvedModulesCnt.ToString("000"));
 				Log("GetSolvedModuleNamesCount: " + state_solvedModulesCnt.ToString());
 			}
 			
 			if (state_isBombPresent != bombInfo.IsBombPresent()) {
 				state_isBombPresent = bombInfo.IsBombPresent();
 				if (state_isBombPresent) {
-					writeLine("!BOMBTRUE");
+					writeLine("!BOMB-TRUE");
 				} else {
-					writeLine("!BOMBFALS");
+					writeLine("!BOMB-FALS");
 				}
 				Log("IsBombPresent: " + state_isBombPresent.ToString());
 			}
@@ -138,21 +155,21 @@ public class SerialSender : MonoBehaviour {
 
 
 	// Called when game state changes between gameplay, setup, postgame and loading
-	// [Gameplay] The gameplay state where defusing happens
-	// [Setup] The setup state in the office where options are chosen
-	// [PostGame] The state where results are shown
-	// [Transitioning] No current state, transitioning to a new state
-	// [Unlock] The unlock state where manual verification and tutorial take place
-	// [Quitting] Game is exiting
+	// 0 [Gameplay] The gameplay state where defusing happens
+	// 1 [Setup] The setup state in the office where options are chosen
+	// 2 [PostGame] The state where results are shown
+	// 3 [Transitioning] No current state, transitioning to a new state
+	// 4 [Unlock] The unlock state where manual verification and tutorial take place
+	// 5 [Quitting] Game is exiting
 	protected void OnStateChange(KMGameInfo.State state) {
 		if (state_game != state) {
 			state_game = state;
 			if (state_game.ToString() == "Quitting") {
-				writeLine("!CLOSE");
+				writeLine("!PORT-CLSE");
 				uart.Close();
 				Log("UART:Closed");
 			} else {
-				writeLine("!STATE" + state_game.ToString());
+				writeLine("!KM-STATE" + ((int)state_game).ToString());
 			}
 			Log("OnStateChange:" + state_game.ToString());
 		}
@@ -164,9 +181,9 @@ public class SerialSender : MonoBehaviour {
 		if (state_alarm != state) {
 			state_alarm = state;
 			if (state_alarm) {
-				writeLine("!ALMTRUE");
+				writeLine("!ALARMTRUE");
 			} else {
-				writeLine("!ALMFALS");
+				writeLine("!ALARMFALS");
 			}
 			Log("OnAlarmClockChange:" + state_alarm.ToString());
 		}
@@ -178,9 +195,9 @@ public class SerialSender : MonoBehaviour {
 		if (state_light != state) {
 			state_light = state;
 			if (state_light) {
-				writeLine("!LIGHTRUE");
+				writeLine("!LIGHTTRUE");
 			} else {
-				writeLine("!LIGHFALS");
+				writeLine("!LIGHTFALS");
 			}
 			Log("OnLightsChange:" + state_light.ToString());
 		}
@@ -188,13 +205,13 @@ public class SerialSender : MonoBehaviour {
 
 
 	protected void OnBombExploded() {
-		writeLine("!BOMEXP");
+		writeLine("!BOMBEXPLD");
 		Log("OnBombExploded");
 	}
 
 
 	protected void OnBombSolved() {
-		writeLine("!BOMSLV");
+		writeLine("!BOMBSOLVD");
 		Log("OnBombSolved");
 	}
 

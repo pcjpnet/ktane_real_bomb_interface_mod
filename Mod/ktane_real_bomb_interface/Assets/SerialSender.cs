@@ -2,13 +2,14 @@
 using System.IO;
 using System.IO.Ports;
 using UnityEngine;
-//using Newtonsoft.Json;
+using Newtonsoft.Json;
 
 
 public class SerialSender : MonoBehaviour {
 	
-	KMGameInfo gameInfo;
-	KMBombInfo bombInfo;
+	public KMGameInfo gameInfo;
+	public KMBombInfo bombInfo;
+	public KMModSettings modSettings;
 	
 	private string folderPath;
 	
@@ -24,6 +25,24 @@ public class SerialSender : MonoBehaviour {
 	private int state_solvableModulesCnt;
 	private int state_solvedModulesCnt;
 	private bool state_isBombPresent;
+	
+	class Settings {
+		public bool uart_enable;
+		public bool uart_list_enable;
+		public string uart_name;
+		public int uart_baud;
+		public bool log_enable;
+		public bool debug_log_enable;
+	}
+	
+	Settings clsSettings;
+	
+	private bool set_uart_enable = false;
+	private bool set_uart_list_enable = false;
+	private string set_uart_name;
+	private int set_uart_baud = 9600;
+	private bool set_log_enable = false;
+	private bool set_debug_log_enable = false;
 
 
 	private void Log(string text)
@@ -34,7 +53,6 @@ public class SerialSender : MonoBehaviour {
 
 	private void listPorts()
 	{
-		
 		File.WriteAllText(folderPath + "SerialPortList.txt", DateTime.Now.ToString("[yyyy/MM/dd HH:mm:ss] ") + "SerialPort List" + Environment.NewLine);
 		string[] portNames = SerialPort.GetPortNames();
 		foreach (string name in portNames)
@@ -46,54 +64,53 @@ public class SerialSender : MonoBehaviour {
 
 	private void writeLine(string line)
 	{
-		
 		uart.WriteLine(line);
-		
 	}
 
 
-	private void Awake()
+	private void Start()
 	{
+		// Load Settings
+		//C:\Users\USER\AppData\LocalLow\Steel Crate Games\Keep Talking and Nobody Explodes\Modsettings\real_bomb_interface-settings.txt
+		clsSettings = JsonConvert.DeserializeObject<Settings>(modSettings.Settings);
+		set_uart_enable = clsSettings.uart_enable;
+		set_uart_list_enable = clsSettings.uart_list_enable;
+		set_uart_name = clsSettings.uart_name;
+		set_uart_baud = clsSettings.uart_baud;
+		set_log_enable = clsSettings.log_enable;
+		set_debug_log_enable = clsSettings.debug_log_enable;
+		
 		// Create Directory
 		// C:\Users\USER\AppData\LocalLow\Steel Crate Games\Keep Talking and Nobody Explodes\real_bomb_interface\
 		folderPath = Application.persistentDataPath + Path.DirectorySeparatorChar + "real_bomb_interface" + Path.DirectorySeparatorChar;
-		(new FileInfo(folderPath)).Directory.Create();
-		Log("Mod loaded");
+		if (set_log_enable || set_uart_list_enable) (new FileInfo(folderPath)).Directory.Create();
+		if (set_log_enable) Log("Mod loaded");
+		if (set_debug_log_enable) Debug.Log("Mod loaded");
 		
-		listPorts();
-		Log("Listed SerialPorts");
+		// List SerialPorts
+		if (set_uart_list_enable) listPorts();
+		if (set_log_enable) Log("Listed SerialPorts");
+		if (set_debug_log_enable) Debug.Log("Listed SerialPorts");
 		
-		gameInfo = this.GetComponent<KMGameInfo>();
+		// Register Callback Functions
 		gameInfo.OnStateChange += OnStateChange;
 		gameInfo.OnAlarmClockChange += OnAlarmClockChange;
 		gameInfo.OnLightsChange += OnLightsChange;
-		
-		bombInfo = this.GetComponent<KMBombInfo>();
 		bombInfo.OnBombExploded += OnBombExploded;
 		bombInfo.OnBombSolved += OnBombSolved;
+		if (set_log_enable) Log("Registered Callback Functions");
+		if (set_debug_log_enable) Debug.Log("Registered Callback Functions");
 		
-		Log("Registered Callback Functions");
-		
-		uart = new SerialPort("COM3", 9600);
-		uart.ReadTimeout = 50;
-		uart.NewLine = "\r\n";
-		uart.Open();
-		writeLine("!PORT-OPEN");
-		
-		Log("UART:Opened");
-		
-		
-		
-		//C:/Users/USER/AppData/LocalLow/Steel Crate Games/Keep Talking and Nobody Explodes/Modsettings/real_bomb_interface-settings.txt
-		
-		
-		
-		
-		
-		
-		
-		
-		
+		// Open SerialPort
+		if (set_uart_enable) {
+			uart = new SerialPort(set_uart_name, set_uart_baud);
+			uart.ReadTimeout = 50;
+			uart.NewLine = "\r\n";
+			uart.Open();
+			writeLine("!PORT-OPEN");
+			if (set_log_enable) Log("UART:Opened");
+			if (set_debug_log_enable) Debug.Log("UART:Opened");
+		}
 		
 	}
 
@@ -104,43 +121,47 @@ public class SerialSender : MonoBehaviour {
 			
 			if (state_time != bombInfo.GetTime()) {
 				state_time = bombInfo.GetTime();
-				//Log("GetTime: " + state_time.ToString("0000"));
+				//if (set_log_enable) Log("GetTime: " + state_time.ToString("0000"));
+				//if (set_debug_log_enable) Debug.Log("GetTime: " + state_time.ToString("0000"));
 			}
 			
 			if (state_fmtTime != bombInfo.GetFormattedTime() && !String.IsNullOrEmpty(bombInfo.GetFormattedTime())) {
 				state_fmtTime = bombInfo.GetFormattedTime();
-				writeLine("!TIME" + state_fmtTime);
-				Log("GetFormattedTime: " + state_fmtTime);
+				if (set_uart_enable) writeLine("!TIME" + state_fmtTime);
+				if (set_log_enable) Log("GetFormattedTime: " + state_fmtTime);
+				if (set_debug_log_enable) Debug.Log("GetFormattedTime: " + state_fmtTime);
 			}
 			
 			if (state_strikes != bombInfo.GetStrikes()) {
 				state_strikes = bombInfo.GetStrikes();
-				writeLine("!STRIKE" + state_strikes.ToString("000"));
-				Log("GetStrikes: " + state_strikes.ToString());
+				if (set_uart_enable) writeLine("!STRIKE" + state_strikes.ToString("000"));
+				if (set_log_enable) Log("GetStrikes: " + state_strikes.ToString());
+				if (set_debug_log_enable) Debug.Log("GetStrikes: " + state_strikes.ToString());
 			}
-			
-			
 			
 			if (state_solvableModulesCnt != bombInfo.GetSolvableModuleNames().Count) {
 				state_solvableModulesCnt = bombInfo.GetSolvableModuleNames().Count;
-				writeLine("!MODULE" + state_solvableModulesCnt.ToString("000"));
-				Log("GetSolvableModuleNamesCount: " + state_solvableModulesCnt.ToString());
+				if (set_uart_enable) writeLine("!MODULE" + state_solvableModulesCnt.ToString("000"));
+				if (set_log_enable) Log("GetSolvableModuleNamesCount: " + state_solvableModulesCnt.ToString());
+				if (set_debug_log_enable) Debug.Log("GetSolvableModuleNamesCount: " + state_solvableModulesCnt.ToString());
 			}
 			
 			if (state_solvedModulesCnt != bombInfo.GetSolvedModuleNames().Count) {
 				state_solvedModulesCnt = bombInfo.GetSolvedModuleNames().Count;
-				writeLine("!MSOLVE" + state_solvedModulesCnt.ToString("000"));
-				Log("GetSolvedModuleNamesCount: " + state_solvedModulesCnt.ToString());
+				if (set_uart_enable) writeLine("!MSOLVE" + state_solvedModulesCnt.ToString("000"));
+				if (set_log_enable) Log("GetSolvedModuleNamesCount: " + state_solvedModulesCnt.ToString());
+				if (set_debug_log_enable) Debug.Log("GetSolvedModuleNamesCount: " + state_solvedModulesCnt.ToString());
 			}
 			
 			if (state_isBombPresent != bombInfo.IsBombPresent()) {
 				state_isBombPresent = bombInfo.IsBombPresent();
 				if (state_isBombPresent) {
-					writeLine("!BOMB-TRUE");
+					if (set_uart_enable) writeLine("!BOMB-TRUE");
 				} else {
-					writeLine("!BOMB-FALS");
+					if (set_uart_enable) writeLine("!BOMB-FALS");
 				}
-				Log("IsBombPresent: " + state_isBombPresent.ToString());
+				if (set_log_enable) Log("IsBombPresent: " + state_isBombPresent.ToString());
+				if (set_debug_log_enable) Debug.Log("IsBombPresent: " + state_isBombPresent.ToString());
 			}
 			
 		}
@@ -162,13 +183,15 @@ public class SerialSender : MonoBehaviour {
 		if (state_game != state) {
 			state_game = state;
 			if (state_game.ToString() == "Quitting") {
-				writeLine("!PORT-CLSE");
-				uart.Close();
-				Log("UART:Closed");
+				if (set_uart_enable) writeLine("!PORT-CLSE");
+				if (set_uart_enable) uart.Close();
+				if (set_log_enable) Log("UART:Closed");
+				if (set_debug_log_enable) Debug.Log("UART:Closed");
 			} else {
-				writeLine("!KM-STATE" + ((int)state_game).ToString());
+				if (set_uart_enable) writeLine("!KM-STATE" + ((int)state_game).ToString());
 			}
-			Log("OnStateChange:" + state_game.ToString());
+			if (set_log_enable) Log("OnStateChange:" + ((int)state_game).ToString() + " " + state_game.ToString());
+			if (set_debug_log_enable) Debug.Log("OnStateChange:" + ((int)state_game).ToString() + " " + state_game.ToString());
 		}
 	}
 
@@ -178,11 +201,12 @@ public class SerialSender : MonoBehaviour {
 		if (state_alarm != state) {
 			state_alarm = state;
 			if (state_alarm) {
-				writeLine("!ALARMTRUE");
+				if (set_uart_enable) writeLine("!ALARMTRUE");
 			} else {
-				writeLine("!ALARMFALS");
+				if (set_uart_enable) writeLine("!ALARMFALS");
 			}
-			Log("OnAlarmClockChange:" + state_alarm.ToString());
+			if (set_log_enable) Log("OnAlarmClockChange:" + state_alarm.ToString());
+			if (set_debug_log_enable) Debug.Log("OnAlarmClockChange:" + state_alarm.ToString());
 		}
 	}
 
@@ -192,24 +216,27 @@ public class SerialSender : MonoBehaviour {
 		if (state_light != state) {
 			state_light = state;
 			if (state_light) {
-				writeLine("!LIGHTTRUE");
+				if (set_uart_enable) writeLine("!LIGHTTRUE");
 			} else {
-				writeLine("!LIGHTFALS");
+				if (set_uart_enable) writeLine("!LIGHTFALS");
 			}
-			Log("OnLightsChange:" + state_light.ToString());
+			if (set_log_enable) Log("OnLightsChange:" + state_light.ToString());
+			if (set_debug_log_enable) Debug.Log("OnLightsChange:" + state_light.ToString());
 		}
 	}
 
 
 	protected void OnBombExploded() {
-		writeLine("!BOMBEXPLD");
-		Log("OnBombExploded");
+		if (set_uart_enable) writeLine("!BOMBEXPLD");
+		if (set_log_enable) Log("OnBombExploded");
+		if (set_debug_log_enable) Debug.Log("OnBombExploded");
 	}
 
 
 	protected void OnBombSolved() {
-		writeLine("!BOMBSOLVD");
-		Log("OnBombSolved");
+		if (set_uart_enable) writeLine("!BOMBSOLVD");
+		if (set_log_enable) Log("OnBombSolved");
+		if (set_debug_log_enable) Debug.Log("OnBombSolved");
 	}
 
 

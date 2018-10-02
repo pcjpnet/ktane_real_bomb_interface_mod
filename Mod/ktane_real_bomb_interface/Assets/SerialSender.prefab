@@ -22,7 +22,7 @@ GameObject:
   - component: {fileID: 114148747513537780}
   - component: {fileID: 114414340459575900}
   - component: {fileID: 114809968974200556}
-  - component: {fileID: 114961252949778868}
+  - component: {fileID: 114768745111085776}
   - component: {fileID: 114640454787800290}
   m_Layer: 0
   m_Name: SerialSender
@@ -77,6 +77,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3f537591d1d61a34990f5245187cd6e3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  gameInfo: {fileID: 114414340459575900}
+  bombInfo: {fileID: 114148747513537780}
+  modSettings: {fileID: 114809968974200556}
+--- !u!114 &114768745111085776
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1898892053685858}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1453678656, guid: 45b809be76fd7a3468b6f517bced6f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &114809968974200556
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -90,14 +104,3 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Settings: 
   SettingsPath: 
---- !u!114 &114961252949778868
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1898892053685858}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: -1453678656, guid: 45b809be76fd7a3468b6f517bced6f28, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 

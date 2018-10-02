@@ -1,0 +1,8 @@
+{
+	"uart_enable": true,
+	"uart_list_enable": true,
+	"uart_name": "COM1",
+	"uart_baud": 9600,
+	"log_enable": false,
+	"debug_log_enable": false
+}

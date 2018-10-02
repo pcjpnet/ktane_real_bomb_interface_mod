@@ -82,9 +82,6 @@ public class SerialSender : MonoBehaviour {
 		
 		Log("UART:Opened");
 		
-		settings = JsonConvert.DeserializeObject<RealBombSettings>(modSettings.Settings);
-		Log("Loaded");
-		Log("Settings: " + settings.ip.ToString());
 		
 		
 		//C:/Users/USER/AppData/LocalLow/Steel Crate Games/Keep Talking and Nobody Explodes/Modsettings/real_bomb_interface-settings.txt

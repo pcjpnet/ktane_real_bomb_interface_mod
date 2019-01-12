@@ -2,12 +2,12 @@
 
 Send ASCII code via serial connection.
 
-line feed code is "\r\n";.
+line feed code is "\n".
 
-The instruction code is based on 12 bytes.
+The instruction code is based on 10 bytes.
 
 ex:
-!PORT-OPEN\r\n
+!PORT-OPEN\n
 
 The 1st byte is the ASCII code exclamation mark "!".
 

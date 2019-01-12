@@ -54,6 +54,6 @@ If "debug_log_enable" is "true", it is logged in the game log file.
 
 Typically game log file path.
 
-D:\Program Files (x86)\Steam\steamapps\common\Keep Talking and Nobody Explodes\ktane_Data\output_log.txt
+C:\Program Files (x86)\Steam\steamapps\common\Keep Talking and Nobody Explodes\ktane_Data\output_log.txt
 
 

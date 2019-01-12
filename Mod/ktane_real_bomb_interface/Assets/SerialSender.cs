@@ -105,7 +105,7 @@ public class SerialSender : MonoBehaviour {
 		if (set_uart_enable) {
 			uart = new SerialPort(set_uart_name, set_uart_baud);
 			uart.ReadTimeout = 50;
-			uart.NewLine = "\r\n";
+			uart.NewLine = "\n";
 			uart.Open();
 			writeLine("!PORT-OPEN");
 			if (set_log_enable) Log("UART:Opened");
